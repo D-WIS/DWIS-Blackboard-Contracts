@@ -1,0 +1,70 @@
+name: Merge to main
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: merge-main
+  cancel-in-progress: false
+env:
+  PACKAGE_VERSION: 1.0.0-edge.${{ github.run_number }}
+jobs:
+  pack-and-push:
+    name: Pack and push edge packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Find the solution
+        id: sln
+        run: |
+          f=$(ls *.sln *.slnx 2>/dev/null | head -1 || true)
+          echo "file=$f" >> "$GITHUB_OUTPUT"
+          if [ -z "$f" ]; then echo "No solution yet; nothing to build."; fi
+      - name: Restore
+        if: steps.sln.outputs.file != ''
+        run: dotnet restore "${{ steps.sln.outputs.file }}"
+      - name: Build
+        if: steps.sln.outputs.file != ''
+        run: dotnet build "${{ steps.sln.outputs.file }}" -c Release --no-restore
+      - name: Test
+        if: steps.sln.outputs.file != ''
+        run: dotnet test "${{ steps.sln.outputs.file }}" -c Release --no-build --logger trx --results-directory TestResults
+      - name: Upload test results
+        if: always() && steps.sln.outputs.file != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: ignore
+
+      - name: Pack
+        if: steps.sln.outputs.file != ''
+        run: dotnet pack "${{ steps.sln.outputs.file }}" -c Release --no-build -o artifacts/packages -p:PackageVersion="$PACKAGE_VERSION"
+      - name: Upload packages
+        if: steps.sln.outputs.file != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+      - name: Authenticate to NuGet.org with trusted publishing
+        if: steps.sln.outputs.file != '' && vars.NUGET_PUSH == 'true'
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Push edge packages
+        if: steps.sln.outputs.file != '' && vars.NUGET_PUSH == 'true'
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          for p in artifacts/packages/*.nupkg; do
+            dotnet nuget push "$p" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
