@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>The five-layer configuration of the DWIS Blackboard Rig Edition hosts: defaults, appsettings, shared file, DWIS__ environment variables, command line; with an effective-configuration report that names the source of each value and masks secrets (specification section 8, R-CFG-1, R-CFG-2).</Description>
+    <PackageId>DWIS.Blackboard.Configuration</PackageId>
+    <PackageTags>dwis;blackboard;configuration</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" />
+  </ItemGroup>
+
+</Project>

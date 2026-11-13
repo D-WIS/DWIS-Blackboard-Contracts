@@ -1,0 +1,25 @@
+<Project>
+
+  <!-- Central package versions. Dependabot proposes bumps here (R-CI-4). -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Configuration">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.CommandLine" Version="10.0.15" />
+  </ItemGroup>
+
+  <ItemGroup Label="Tests">
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.3" />
+    <!-- FluentAssertions 8 and later need a paid licence for commercial use; 7.x stays Apache 2.0. -->
+    <PackageVersion Include="FluentAssertions" Version="7.2.2" />
+  </ItemGroup>
+
+</Project>
