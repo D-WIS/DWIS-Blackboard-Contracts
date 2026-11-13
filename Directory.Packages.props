@@ -19,7 +19,7 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.3" />
     <!-- FluentAssertions 8 and later need a paid licence for commercial use; 7.x stays Apache 2.0. -->
-    <PackageVersion Include="FluentAssertions" Version="7.2.2" />
+    <PackageVersion Include="FluentAssertions" Version="8.11.0" />
   </ItemGroup>
 
 </Project>
