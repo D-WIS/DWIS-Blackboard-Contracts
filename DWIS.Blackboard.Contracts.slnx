@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/DWIS.Blackboard.Contracts/DWIS.Blackboard.Contracts.csproj" />
     <Project Path="src/DWIS.Blackboard.Configuration/DWIS.Blackboard.Configuration.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/DWIS.Blackboard.Contracts.Tests/DWIS.Blackboard.Contracts.Tests.csproj" />
     <Project Path="tests/DWIS.Blackboard.Configuration.Tests/DWIS.Blackboard.Configuration.Tests.csproj" />
   </Folder>
 </Solution>
