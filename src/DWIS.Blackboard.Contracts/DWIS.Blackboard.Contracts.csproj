@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>The contract between the Rig Edition processes: the manifest DTOs (same JSON shape as DWIS.API.DTO 2.x), the namespace translation; later the report model, the HTTP DTOs and the gRPC contract (specification 3.3, 3.4, 3.6; decision D-43).</Description>
+    <PackageId>DWIS.Blackboard.Contracts</PackageId>
+    <PackageTags>dwis;blackboard;contracts;manifest</PackageTags>
+  </PropertyGroup>
+
+</Project>

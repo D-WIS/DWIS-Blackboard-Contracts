@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DWIS.Blackboard.Contracts/DWIS.Blackboard.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Fixtures/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

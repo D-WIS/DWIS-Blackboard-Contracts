@@ -14,8 +14,8 @@ One solution, `DWIS.Blackboard.Contracts.slnx`, .NET 10, with shared settings in
 
 | Project | Responsibility |
 |---|---|
+| `src/DWIS.Blackboard.Contracts` | the manifest DTOs (`Manifests.Manifest` and friends, the JSON shape of `DWIS.API.DTO` 2.x, read and written by `ManifestJson`; decision D-43) and the namespace translation `Namespaces` (specification 3.6); later the report model, the HTTP DTOs and the gRPC contract |
 | `src/DWIS.Blackboard.Configuration` | the five-layer configuration of both hosts (specification section 8) and the effective-configuration report with sources and masked secrets |
-| `src/DWIS.Blackboard.Contracts` (milestone 3) | the gRPC protobuf files, the HTTP DTOs, the report model, the namespace translation function |
 
 ## DWIS.Blackboard.Configuration
 
