@@ -18,17 +18,22 @@ public sealed record Manifest
     /// <summary>Namespace aliases and OPC UA settings used by the references.</summary>
     public InjectionInformation InjectionInformation { get; init; } = new();
 
+    private readonly IReadOnlyList<InjectedVariable> _injectedVariables = [];
+    private readonly IReadOnlyList<InjectedNode> _injectedNodes = [];
+    private readonly IReadOnlyList<InjectedReference> _injectedReferences = [];
+    private readonly IReadOnlyList<ProvidedVariable> _providedVariables = [];
+
     /// <summary>Variables mirrored from another OPC UA server. Dropped by the Rig Edition with a warning (decision D-26).</summary>
-    public IReadOnlyList<InjectedVariable> InjectedVariables { get; init; } = [];
+    public IReadOnlyList<InjectedVariable> InjectedVariables { get => _injectedVariables; init => _injectedVariables = value ?? []; }
 
     /// <summary>The semantic nodes of the manifest.</summary>
-    public IReadOnlyList<InjectedNode> InjectedNodes { get; init; } = [];
+    public IReadOnlyList<InjectedNode> InjectedNodes { get => _injectedNodes; init => _injectedNodes = value ?? []; }
 
     /// <summary>The references (subject, verb, object) among nodes, variables and vocabulary terms.</summary>
-    public IReadOnlyList<InjectedReference> InjectedReferences { get; init; } = [];
+    public IReadOnlyList<InjectedReference> InjectedReferences { get => _injectedReferences; init => _injectedReferences = value ?? []; }
 
     /// <summary>The variables the provider will write.</summary>
-    public IReadOnlyList<ProvidedVariable> ProvidedVariables { get; init; } = [];
+    public IReadOnlyList<ProvidedVariable> ProvidedVariables { get => _providedVariables; init => _providedVariables = value ?? []; }
 
     /// <summary>
     /// A vocabulary extension carried by the manifest (the old <c>DWIS.Vocabulary.Development.Vocabulary</c>).
