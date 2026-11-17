@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>The gRPC contract between the Rig Edition processes (specification 3.3, decision D-10): the generated client and server of the Semantic service and its messages, from proto/semantic.proto, which the package ships for other languages.</Description>
+    <PackageId>DWIS.Blackboard.Contracts.Grpc</PackageId>
+    <PackageTags>dwis;blackboard;contracts;grpc;protobuf</PackageTags>
+    <!-- Everything in this assembly is generated from the proto file, which carries the documentation. -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Core.Api" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The normative contract: proto/semantic.proto at the root of the repository. Client and server stubs
+         are generated at build time; the file itself goes into the package under proto/ for non-.NET adapters. -->
+    <Protobuf Include="../../proto/semantic.proto" ProtoRoot="../../proto" GrpcServices="Both" Link="proto/semantic.proto" />
+    <None Include="../../proto/semantic.proto" Pack="true" PackagePath="proto/" Visible="false" />
+  </ItemGroup>
+
+</Project>

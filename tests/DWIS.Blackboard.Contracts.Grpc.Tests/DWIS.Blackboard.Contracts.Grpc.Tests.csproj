@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/DWIS.Blackboard.Contracts.Grpc/DWIS.Blackboard.Contracts.Grpc.csproj" />
+  </ItemGroup>
+
+</Project>

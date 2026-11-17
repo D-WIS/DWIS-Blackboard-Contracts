@@ -4,7 +4,7 @@ Part of DWIS Blackboard Rig Edition (GitHub topic `dwis-blackboard-rig-edition`)
 
 **Holds:** the gRPC protobuf files, the HTTP DTOs, the report model, the namespace translation function, and the configuration library `DWIS.Blackboard.Configuration`.
 
-**Produces:** NuGet packages `DWIS.Blackboard.Contracts` and `DWIS.Blackboard.Configuration`, `1.0.0-edge.<run>` from every merge to `main`, versioned from tags.
+**Produces:** NuGet packages `DWIS.Blackboard.Contracts`, `DWIS.Blackboard.Configuration` and `DWIS.Blackboard.Contracts.Grpc`, `1.0.0-edge.<run>` from every merge to `main`, versioned from tags.
 
 **Depends on:** nothing.
 
@@ -16,6 +16,7 @@ One solution, `DWIS.Blackboard.Contracts.slnx`, .NET 10, with shared settings in
 |---|---|
 | `src/DWIS.Blackboard.Contracts` | the manifest DTOs (`Manifests.Manifest` and friends, the JSON shape of `DWIS.API.DTO` 2.x, read and written by `ManifestJson`; decision D-43) and the namespace translation `Namespaces` (specification 3.6); later the report model, the HTTP DTOs and the gRPC contract |
 | `src/DWIS.Blackboard.Configuration` | the five-layer configuration of both hosts (specification section 8) and the effective-configuration report with sources and masked secrets |
+| `src/DWIS.Blackboard.Contracts.Grpc` | the gRPC contract of specification 3.3 (decision D-10): the client and server generated from `proto/semantic.proto`, the normative file, which the package also ships under `proto/` for other languages. The manifest and the report travel as JSON strings; ids, variables, endpoints and rows are typed fields |
 
 ## DWIS.Blackboard.Configuration
 
