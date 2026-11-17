@@ -1,0 +1,227 @@
+// The contract between the real-time process and the semantic service of the DWIS Blackboard Rig Edition
+// (specification 3.3, decision D-10: gRPC between the processes, HTTP for tools and tests). This file is the
+// normative version of the contract; the specification keeps a readable copy.
+//
+// Conventions:
+// - A manifest and a report travel as JSON strings: the manifest in the JSON shape of DWIS.API.DTO 2.x
+//   (DWIS.Blackboard.Contracts, decision D-43), the report in the shape of Appendix C.9. Everything the
+//   real-time process acts on (ids, variables, endpoints, rows) is a typed field.
+// - IRIs are canonical (http://d-wis.org/, specification 3.6); the real-time process translates on its
+//   OPC UA egress. A row value is an IRI, the lexical value of a literal, "_:" and the label of a blank node,
+//   or "" when the variable is unbound.
+// - Errors are gRPC status codes: INVALID_ARGUMENT (a manifest that does not parse, a query that is not a
+//   SELECT, an id that does not match), NOT_FOUND (an unknown or expired staged manifest, a manifest that is
+//   not live, an unknown query), FAILED_PRECONDITION (the vocabulary not loaded yet), ABORTED (a vocabulary
+//   change in progress), RESOURCE_EXHAUSTED (the row or time limit of a query).
+// - Every call takes a deadline; the server stream of WatchQueries ends cleanly when the service stops, and
+//   the real-time process reconnects and registers its queries again (nothing is persisted, R-SEM-7).
+
+syntax = "proto3";
+
+package dwis.blackboard.semantic.v1;
+
+option csharp_namespace = "DWIS.Blackboard.Contracts.Grpc";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// The semantic service as the real-time process sees it (specification 3.2, 3.3).
+service Semantic {
+  // Validate, pre-reason and stage a manifest (specification 4, steps 1 to 5): never rejects the core. The
+  // staged manifest waits for CommitManifest or AbortManifest; it expires after the staging time limit
+  // (60 s by default, Appendix C.5). Identical content already live comes back with already_live = true.
+  rpc PrepareManifest (PrepareRequest) returns (PrepareResult);
+  // Make a staged manifest live: final reasoning, re-check, provenance, endpoints, then a round of the
+  // registered queries (specification 4, step 7).
+  rpc CommitManifest (CommitRequest) returns (CommitResult);
+  // Drop a staged manifest that will not be committed.
+  rpc AbortManifest (ManifestRef) returns (google.protobuf.Empty);
+  // Remove a live manifest: its graphs and endpoints; then a round of the registered queries.
+  rpc RemoveManifest (ManifestRef) returns (RemoveResult);
+  // Every live manifest with what the real-time process needs to rebuild its nodes after a restart (R-SEM-7).
+  rpc ListManifests (google.protobuf.Empty) returns (ManifestList);
+  // One SPARQL SELECT on the live description (the ResolveQuery facade), under the query limits (R-SEM-8).
+  rpc Query (SparqlRequest) returns (QueryResult);
+  // The individuals and sentences of the live description (the GetResources facade).
+  rpc GetResources (google.protobuf.Empty) returns (ResourceFile);
+  // Register a query for an owner (a session of the real-time process); the answer is the full snapshot.
+  // The same text registered again, by any owner, is the same query (R-QR-3).
+  rpc RegisterQuery (RegisterRequest) returns (QuerySnapshot);
+  // Release one owner's registration of a query; other owners keep it alive.
+  rpc UnregisterQuery (UnregisterRequest) returns (UnregisterResult);
+  // Release everything an owner registered (its session closed).
+  rpc ReleaseOwner (OwnerRef) returns (ReleasedQueries);
+  // One stream per real-time process: every diff of every query its owners registered, after every change
+  // to the live description (R-QR-2). The real-time process fans out to its sessions.
+  rpc WatchQueries (WatchRequest) returns (stream QueryDiff);
+  // The vocabulary version in force and whether the service is ready.
+  rpc GetVocabulary (google.protobuf.Empty) returns (VocabularyInfo);
+}
+
+// A manifest by its id: {provider}/{name}, the name made safe for a path (Appendix C.5).
+message ManifestRef {
+  string provider = 1;
+  string name = 2;
+}
+
+message PrepareRequest {
+  // The manifest in the JSON shape of DWIS.API.DTO 2.x.
+  string manifest_json = 1;
+  // Where the injection comes from: "local", or the hub site name (provenance).
+  string origin = 2;
+}
+
+// A provided variable the real-time process creates, with its validity flag (R-RT-4).
+message ProvidedVariable {
+  string variable_id = 1;
+  string data_type = 2;
+  int32 rank = 3;
+  repeated int32 dimensions = 4;
+  string initial_value = 5;
+  // The id of the validity boolean next to the variable ({variable_id}_validitySignal).
+  string validity_variable_id = 6;
+}
+
+message PrepareResult {
+  ManifestRef manifest = 1;
+  // True when the whole manifest is valid; false when only the core goes live (the report says why).
+  bool accepted = 2;
+  // The report of the pre-processing pass, Appendix C.9 shape.
+  string report_json = 3;
+  // The variables to create, always, even for a manifest that is not accepted.
+  repeated ProvidedVariable variables = 4;
+  // sha256: and 64 hex digits of the manifest in its canonical JSON form.
+  string content_hash = 5;
+  // True when identical content is already live: nothing is staged, a commit is not needed.
+  bool already_live = 6;
+}
+
+// Where a provided variable lives in the real-time process (R-RT-5: stored by the service, so that another
+// transport can be added later without changing the real-time process).
+message VariableEndpoint {
+  string variable_id = 1;
+  string endpoint_url = 2;
+  string namespace_uri = 3;
+  string node_id = 4;
+}
+
+message CommitRequest {
+  ManifestRef manifest = 1;
+  repeated VariableEndpoint endpoints = 2;
+}
+
+message CommitResult {
+  ManifestRef manifest = 1;
+  // True when the whole manifest is live; false when the re-check after reasoning downgraded it to core-only.
+  bool accepted = 2;
+  // The final report, Appendix C.9 shape (the pre-processing findings plus those of the re-check).
+  string report_json = 3;
+}
+
+message RemoveResult {
+  // False when the manifest was not live (nothing was touched).
+  bool removed = 1;
+}
+
+message ManifestSummary {
+  ManifestRef manifest = 1;
+  string manifest_name = 2;
+  bool accepted = 3;
+  string content_hash = 4;
+  string vocabulary_version = 5;
+  google.protobuf.Timestamp injected_at = 6;
+  repeated ProvidedVariable variables = 7;
+  repeated VariableEndpoint endpoints = 8;
+}
+
+message ManifestList {
+  repeated ManifestSummary manifests = 1;
+}
+
+message SparqlRequest {
+  string query = 1;
+}
+
+// One row of a SELECT answer: one value per variable, in the order of the variables.
+message Row {
+  repeated string values = 1;
+}
+
+message QueryResult {
+  repeated string variables = 1;
+  repeated Row rows = 2;
+  // True when the row or time limit cut the answer short.
+  bool truncated = 3;
+}
+
+// An individual of the live description and its class (the DDHubIndividual of the old API, as IRIs).
+message Individual {
+  string iri = 1;
+  string type_iri = 2;
+}
+
+// A reference between two individuals (the DDHubSentence of the old API, as IRIs).
+message Sentence {
+  string subject = 1;
+  string verb = 2;
+  string object = 3;
+}
+
+message ResourceFile {
+  repeated Individual individuals = 1;
+  repeated Sentence sentences = 2;
+}
+
+message RegisterRequest {
+  string query = 1;
+  // The owner: the id of the session of the real-time process. Empty for the real-time process itself.
+  string owner = 2;
+}
+
+message QuerySnapshot {
+  int32 query_id = 1;
+  repeated string variables = 2;
+  repeated Row rows = 3;
+}
+
+message UnregisterRequest {
+  string query = 1;
+  string owner = 2;
+}
+
+message UnregisterResult {
+  // False when the owner did not hold the query.
+  bool released = 1;
+  int32 query_id = 2;
+}
+
+message OwnerRef {
+  string owner = 1;
+}
+
+message ReleasedQueries {
+  // The queries that went with the owner (no other owner held them).
+  repeated int32 query_ids = 1;
+}
+
+message WatchRequest {
+  // The real-time process, for the logs.
+  string watcher = 1;
+}
+
+message QueryDiff {
+  int32 query_id = 1;
+  repeated string variables = 2;
+  repeated Row added = 3;
+  repeated Row removed = 4;
+  google.protobuf.Timestamp at = 5;
+}
+
+message VocabularyInfo {
+  string version = 1;
+  string vocabulary_graph = 2;
+  string units_graph = 3;
+  // False until the service has read the vocabulary and the units from the store.
+  bool loaded = 4;
+  int32 registered_queries = 5;
+}
