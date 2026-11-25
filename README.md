@@ -14,7 +14,7 @@ One solution, `DWIS.Blackboard.Contracts.slnx`, .NET 10, with shared settings in
 
 | Project | Responsibility |
 |---|---|
-| `src/DWIS.Blackboard.Contracts` | the manifest DTOs (`Manifests.Manifest` and friends, the JSON shape of `DWIS.API.DTO` 2.x, read and written by `ManifestJson`; decision D-43) and the namespace translation `Namespaces` (specification 3.6); later the report model, the HTTP DTOs and the gRPC contract |
+| `src/DWIS.Blackboard.Contracts` | the manifest DTOs (`Manifests.Manifest` and friends, the JSON shape of `DWIS.API.DTO` 2.x, read and written by `ManifestJson`; decision D-43) and the namespace translation `Namespaces` (specification 3.6) and the name rule `Names.IriSafe` (decision D-62: the characters an IRI cannot carry become underscores, the one rule for the service's IRIs and the process's namespaces and node ids); later the report model, the HTTP DTOs and the gRPC contract |
 | `src/DWIS.Blackboard.Configuration` | the five-layer configuration of both hosts (specification section 8) and the effective-configuration report with sources and masked secrets |
 | `src/DWIS.Blackboard.Contracts.Grpc` | the gRPC contract of specification 3.3 (decision D-10): the client and server generated from `proto/semantic.proto`, the normative file, which the package also ships under `proto/` for other languages. The manifest and the report travel as JSON strings; ids, variables, endpoints and rows are typed fields |
 
