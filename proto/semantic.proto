@@ -45,14 +45,16 @@ service Semantic {
   // The individuals and sentences of the live description (the GetResources facade).
   rpc GetResources (google.protobuf.Empty) returns (ResourceFile);
   // Register a query for an owner (a session of the real-time process); the answer is the full snapshot.
-  // The same text registered again, by any owner, is the same query (R-QR-3).
+  // The same text registered again, by any owner, is the same query (R-QR-3). The request names the
+  // watcher the owner belongs to, so that a fresh watch stream can release it (decision D-61).
   rpc RegisterQuery (RegisterRequest) returns (QuerySnapshot);
   // Release one owner's registration of a query; other owners keep it alive.
   rpc UnregisterQuery (UnregisterRequest) returns (UnregisterResult);
   // Release everything an owner registered (its session closed).
   rpc ReleaseOwner (OwnerRef) returns (ReleasedQueries);
   // One stream per real-time process: every diff of every query its owners registered, after every change
-  // to the live description (R-QR-2). The real-time process fans out to its sessions.
+  // to the live description (R-QR-2). The real-time process fans out to its sessions. Opened fresh after a
+  // start-up, the stream first releases every owner the watcher registered before (decision D-61).
   rpc WatchQueries (WatchRequest) returns (stream QueryDiff);
   // The vocabulary version in force and whether the service is ready.
   rpc GetVocabulary (google.protobuf.Empty) returns (VocabularyInfo);
@@ -176,6 +178,10 @@ message RegisterRequest {
   string query = 1;
   // The owner: the id of the session of the real-time process. Empty for the real-time process itself.
   string owner = 2;
+  // The watcher the owner belongs to: the name the real-time process gives WatchQueries (decision D-61).
+  // Empty when no watcher owns the registration (the HTTP API, the service itself); such an owner is
+  // never released by a fresh stream.
+  string watcher = 3;
 }
 
 message QuerySnapshot {
@@ -205,8 +211,13 @@ message ReleasedQueries {
 }
 
 message WatchRequest {
-  // The real-time process, for the logs.
+  // The real-time process: the name its registrations carry as watcher, and the name in the logs.
   string watcher = 1;
+  // True when the watcher opens its stream after a start-up (decision D-61): before the first diff, the
+  // service releases every owner this watcher registered before, as ReleaseOwner would, since the
+  // sessions of a process that died are gone with it. False to resume after a dropped stream: the
+  // registrations stay, and the stream carries the diffs from now on (a snapshot is a RegisterQuery).
+  bool fresh = 2;
 }
 
 message QueryDiff {

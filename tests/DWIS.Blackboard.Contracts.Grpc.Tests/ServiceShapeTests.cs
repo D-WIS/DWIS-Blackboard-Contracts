@@ -32,6 +32,18 @@ public sealed class ServiceShapeTests
     }
 
     [Fact]
+    public void A_registration_names_its_watcher_and_a_fresh_stream_releases_the_watchers_owners()
+    {
+        // Decision D-61, additive (D-48): the fields are new numbers, so a client without them still talks to the service.
+        FieldNames(RegisterRequest.Descriptor).Should().Equal("query", "owner", "watcher");
+        RegisterRequest.Descriptor.FindFieldByName("watcher").FieldNumber.Should().Be(3);
+        FieldNames(WatchRequest.Descriptor).Should().Equal("watcher", "fresh");
+        WatchRequest.Descriptor.FindFieldByName("fresh").FieldNumber.Should().Be(2);
+        new RegisterRequest { Query = "q", Owner = "o" }.Watcher.Should().BeEmpty("a registration outside a watcher carries no watcher");
+        new WatchRequest { Watcher = "rig-1" }.Fresh.Should().BeFalse("a stream resumed after a drop keeps the registrations");
+    }
+
+    [Fact]
     public void A_server_and_a_client_are_generated()
     {
         // A server derives from the base class and overrides the calls it implements.
