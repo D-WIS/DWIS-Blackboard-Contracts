@@ -50,13 +50,13 @@ public sealed class MessageRoundTripTests
             Individuals = { new Individual { Iri = "http://d-wis.org/SmartConnect/spp#01", TypeIri = "http://d-wis.org/SPP" } },
             Sentences = { new Sentence { Subject = "http://d-wis.org/SmartConnect/spp#01", Verb = "http://d-wis.org/HasDynamicValue", Object = "http://d-wis.org/SmartConnect/Variables/SmartConnect.spp" } },
         },
-        new RegisterRequest { Query = "SELECT ?s WHERE { ?s ?p ?o }", Owner = "session 7" },
+        new RegisterRequest { Query = "SELECT ?s WHERE { ?s ?p ?o }", Owner = "session 7", Watcher = "rig-1" },
         new QuerySnapshot { QueryId = 3, Variables = { "s" }, Rows = { new Row { Values = { "http://d-wis.org/a" } } } },
         new UnregisterRequest { Query = "q", Owner = "session 7" },
         new UnregisterResult { Released = true, QueryId = 3 },
         new OwnerRef { Owner = "session 7" },
         new ReleasedQueries { QueryIds = { 3, 4 } },
-        new WatchRequest { Watcher = "rig-1" },
+        new WatchRequest { Watcher = "rig-1", Fresh = true },
         new QueryDiff
         {
             QueryId = 3,
